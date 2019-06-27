@@ -1,0 +1,24 @@
+-	Générer un CSR
+
+openssl req -new -sha256 -key server.key.pem -keyform pem -subj "/C=FR/ST=Alpes\ Maritimes/L=Sophia/O=Orange/OU=Orange/CN=*.prod.oih.multis.p.fti.net/emailAddress=dfy.hbx.sec.all@list.orangeportails.net" -out server.csr.pem -outform pem -verbose
+
+-	Generation cle 
+openssl genpkey -algorithm rsa -pkeyopt rsa_keygen_bits:2048 -out caldav.orange.fr.key -outform pem
+
+-	Vérification d'un certificat 
+openssl x509 -in certificat.crt -text -noout
+openssl x509 -in certificat.crt -text -noout -nameopt multiline: affiche sur plusieurs lignes 
+
+-	Vérification d'un CSR
+openssl req -text -noout -verify -in CSR.csr
+
+-	Vérification d'une clé
+openssl rsa -in privateKey.key -check
+
+-	Correspondance entre clé et certif
+
+openssl rsa -noout -modulus -in server.key | md5sum
+1fa4190d97960de04ff17a9c7020e596
+
+openssl x509 -noout -modulus -in server.crt | md5sum
+1fa4190d97960de04ff17a9c7020e596

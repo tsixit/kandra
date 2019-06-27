@@ -1,0 +1,191 @@
+MYSQL 
+- dump structure table
+	mysqldump BO_DWH_SYMBIOZ FACT_POINTAGES --no-data > FACT_POINTAGES.sql
+
+- dump  table 
+	mysqldump BO_DWH_SYMBIOZ FACT_POINTAGES > FACT_POINTAGES.sql
+
+- dump une base
+	mysqldump --defaults-file=/etc/mysql/genconf/debian-db-budgest_bddint_30000.cnf db_budgest>dumpbudgest.
+
+- dump d'une base puis compresser
+	mysqldump --defaults-file=/etc/mysql/debian.cnf hebex_dwh |gzip >dump_hebex_dwh_`date +\%m\%d\%Y`.sql.gz
+
+- dump d'une table:
+	mysqldump BO_DWH_SYMBIOZ LOG_ALIMENTATION>dump_log.sql
+
+- dump procedure et fonction
+	mysqldump --defaults-file=/etc/mysql/debian.cnf --routines hebex_dwh |gzip >dump_hebex_dwh_func_proc`date +\%m\%d\%Y`.sql.gz
+
+
+- import mysql
+mysql --defaults-file=/etc/mysql/debian.cnf <dump.sql
+gunzip < db-backup.sql.gz | mysql -p -h db.example.com dbname
+
+- connecter à mysql sans le user et passwd
+	mysql --defaults-file=/etc/mysql/debian.cnf 
+
+- exécuter un fichier sql directement dans la console mysql
+	source <fichier.sql>
+
+- connecter à une instance mysql (ex:budgest):
+mysql --defaults-file=/etc/mysql/genconf/debian-db-budgest_bddint_30000.cnf 
+
+- Creer un user 
+	create user "exploitoio"@"www%.int.oio.b0.p.fti.net" Identified by "frf475*!j";
+	
+- Grant un user sur une base
+ 	grant all privileges on hebex_dwh.* to "exploit"@"www%.int.oio.b0.p.fti.net";
+ 	flush privileges;
+
+- Grant un user sur table d'un base
+	grant select on hebex_dwh.static_vue_mach_prod_profile to 'genconf'@'www0%.oih.%.p.fti.net';
+	flush privileges;
+
+- Grant sur toute les tables d'une base
+	GRANT SELECT ON `netflux`.* TO 'qac'@'www0%.preprod.oih.%.p.fti.net';
+
+- voir les grants d'un user:
+	SHOW GRANTS FOR 'techonthenet';
+	SHOW GRANTS FOR 'techonthenet'@'localhost';
+
+- Supprimer un user
+	DROP USER 'jeffrey'@'localhost';
+
+- Supprimer un privileges
+	revoke file on *.* from  'qualis'@'backend%.rec.oio.%.p.fti.net';
+
+- Supprimer une tables 
+	DROP TABLE <table_name>;
+
+- renommer une table
+	alter table bad_name rename to good_name;
+
+- voir les triggers d'une table:
+	show triggers like "table_name"\G 
+
+- voir tout les threads/process en cours
+	show processlist
+
+- voir la liste des connexions/server Federated
+	select * from mysql.servers;
+
+- créer un serveur de connexion Federated
+	CREATE SERVER fed_read_oio_symbioz_dwh_preprod FOREIGN DATA WRAPPER mysql OPTIONS (USER 'fed_user', HOST 'read-mysql.teknoosymbioz.preprod.oio.multis.p.fti.net', DATABASE 'symbioz_dwh', Port 3306, PASSWORD 'yg1Dhln7' );
+
+- supprimer un server:
+	DROP server if exists <server_name>;
+
+- voir la liste des functions et procedure
+	show function status;
+	show procedure status;
+
+- voir le contenu d'une fonction/procedure
+	show create function tkn_get_statut_personne;
+	show create procedure tkn_get_statut_personne;
+
+- voir la liste des tables avec le moteur "FEDERATED"
+	SELECT TABLE_NAME FROM information_schema.TABLES WHERE engine = 'FEDERATED';
+
+- Afficher la collation d'une table  d'une base de donnée
+	SELECT TABLE_SCHEMA, TABLE_NAME, TABLE_COLLATION FROM INFORMATION_SCHEMA.TABLES;"|grep BO_DWH_SYMBIOZ >tables_collation_bo_dwh_symbioz
+
+- Affiche les decriptions d'une table 
+	descp nom_tables;
+
+- Mettre en read only les tables;
+	FLUSH TABLES WITH READ LOCK;
+
+- Metre en read write la table;
+	 unlock tables;
+
+- Afficher l'index de toutes les tables:
+	SELECT DISTINCT
+	    TABLE_NAME,
+	    INDEX_NAME
+	FROM INFORMATION_SCHEMA.STATISTICS
+	WHERE TABLE_SCHEMA = 'your_schema';
+
+- Afficher la liste des view sur une base
+	show full tables where Table_type like "VIEW";
+
+- Afficher le contenu d'une 
+	show create view vue_service_crit_domaines;
+
+- Lister les tables avec leur tailles
+	SELECT
+	  TABLE_NAME AS `Table`,
+	  ROUND((DATA_LENGTH + INDEX_LENGTH) / 1024 / 1024) AS `Size (MB)`
+	FROM
+	  information_schema.TABLES
+	WHERE
+	  TABLE_SCHEMA = "bookstore"
+	ORDER BY
+	  (DATA_LENGTH + INDEX_LENGTH)
+	DESC;
+
+
+- master ou slave
+show master status;
+	> si master:
+		mysql> show master status;
++--------------------------------+----------+--------------+------------------+
+| File                           | Position | Binlog_Do_DB | Binlog_Ignore_DB |
++--------------------------------+----------+--------------+------------------+
+| mysql-master-db-log_bin.009279 |      107 |              |                  |
++--------------------------------+----------+--------------+------------------+
+show slave status \G;
+	> si slave:
+		mysql> show slave status \G;
+*************************** 1. row ***************************
+               Slave_IO_State: Waiting for master to send event
+                  Master_Host: db03.oih.s1.p.fti.net
+                  Master_User: repl
+                  Master_Port: 3306
+                Connect_Retry: 60
+
+- Verifier que la replication tourne
+sur le slave:
+	              Slave_IO_State: Waiting for master to send event
+                  Master_Host: db03.oih.s1.p.fti.net
+                  Master_User: repl
+                  ...
+             	Slave_IO_Running: Yes
+            	Slave_SQL_Running: Yes
+            	...
+            	Seconds_Behind_Master: 0
+ Seconds_Behind_Master: 0 quand il n'y pas de décallage entre le master et le slave 
+
+ - Stop/Star un slave
+Sur le slave:
+stop slave;
+start slave;
+
+- Mettre en slave 
+	CHANGE MASTER TO MASTER_HOST = 'db02.preprod.oih.b1.p.fti.net', MASTER_USER = 'repl', MASTER_PASSWORD = 'elee0Ce', MASTER_LOG_FILE='mysql-db02.028764', MASTER_LOG_POS=1073429554;
+
+- Modifier le master_log_file et le master_log_pos
+	CHANGE MASTER TO MASTER_LOG_FILE='mysql-db02.027745', MASTER_LOG_POS=573882534;
+
+- error replication: fonction non deterministic:
+	voir https://dba.stackexchange.com/questions/108316/use-of-log-bin-trust-function-creators-in-mysql
+
+XTRADB
+=======
+- Savoir l'état des noeuds xtradb:
+mysql --defaults-file=/etc/mysql/debian.cnf -e "show status like '%wsrep_clu%';"
+mysql --defaults-file=/etc/mysql/debian.cnf -e "show status like '%wsrep%';"
+
+- dump on demand db:
+	https://gitlab.si.francetelecom.fr/infrastructure-services/service-xtradbcluster/tools/cf-xtradb-backup-on-demand 
+	ou via mysqldump (ex budgest) :
+	mysqldump --defaults-file=/etc/mysql/genconf/debian-db-ribs_bddint_30016.cnf --compress --triggers --routines --quick --single-transaction --skip-add-locks db_ribs |gzip >dump_ribs_`date +\%m\%d\%Y`.sql.gz
+
+- crash mysql sur tous les noeuds:
+	- modifer la conf my.cnf et cherchez la variable "wsrep_cluster_address"; puis commenter la ligne et mettre la ligne suivante:
+		wsrep_cluster_address = gcomm://
+	- relancer mysql comme suit sur chaque noeud:
+		service mysql start --wsrep-cluster-start
+	- une fois mysql démarré, décommenter la ligne contenant "wsrep_cluster_address" précedemment commenter 
+	- reload mysql 
+		service mysql reload
